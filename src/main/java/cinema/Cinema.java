@@ -23,13 +23,11 @@ public class Cinema {
         this.rows = rows;
         this.columns = columns;
         for (int i = 0; i < rows; i++)
-            for (int j = 0; j < columns; j++) {
-                Seat seat = new Seat();
-                seat.setRow(i);
-                seat.setColumn(j);
-                seat.setStatus(SeatStatus.FREE);
-                seats.add(seat);
-            }
+            for (int j = 0; j < columns; j++)
+                seats.add(new Seat()
+                        .setRow(i)
+                        .setColumn(j)
+                        .setStatus(SeatStatus.FREE));
     }
 
     public Seat getSeat(int row, int column) {

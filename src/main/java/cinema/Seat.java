@@ -13,23 +13,26 @@ public class Seat {
         return row;
     }
 
-    public void setRow(int row) {
+    public Seat setRow(int row) {
         this.row = row;
+        return this;
     }
 
     public int getColumn() {
         return column;
     }
 
-    public void setColumn(int column) {
+    public Seat setColumn(int column) {
         this.column = column;
+        return this;
     }
 
     public SeatStatus getStatus() {
         return status;
     }
 
-    public void setStatus(SeatStatus status) {
+    public Seat setStatus(SeatStatus status) {
         this.status = status;
+        return this;
     }
 }

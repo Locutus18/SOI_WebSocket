@@ -9,15 +9,17 @@ public class Lock {
         return id;
     }
 
-    public void setId(String id) {
+    public Lock setId(String id) {
         this.id = id;
+        return this;
     }
 
     public Seat getSeat() {
         return seat;
     }
 
-    public void setSeat(Seat seat) {
+    public Lock setSeat(Seat seat) {
         this.seat = seat;
+        return this;
     }
 }
