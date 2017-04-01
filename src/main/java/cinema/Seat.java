@@ -5,10 +5,6 @@ public class Seat {
     private int row, column;
     private SeatStatus status;
 
-    public Seat() {
-        status = SeatStatus.FREE;
-    }
-
     public int getRow() {
         return row;
     }

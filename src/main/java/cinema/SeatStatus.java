@@ -1,16 +1,17 @@
 package cinema;
 
 public enum SeatStatus {
-        FREE("Free"),
-        LOCKED("Locked"),
-        RESERVED("Reserved");
+    FREE("free"),
+    LOCKED("locked"),
+    RESERVED("reserved");
 
-        private final String value;
-        SeatStatus(String v) {
-            value = v;
-        }
+    private final String value;
 
-        public String value() {
-            return value;
-        }
+    SeatStatus(String sValue) {
+        value = sValue;
     }
+
+    public String value() {
+        return value;
+    }
+}

@@ -1,15 +1,19 @@
 package cinema;
 
-public class Lock {
+public class Lock implements Comparable<Lock> {
 
-    private String id;
+    private Integer id;
     private Seat seat;
 
-    public String getId() {
+    public Lock() {
+        id = 0;
+    }
+
+    public int getId() {
         return id;
     }
 
-    public Lock setId(String id) {
+    public Lock setId(int id) {
         this.id = id;
         return this;
     }
@@ -21,5 +25,10 @@ public class Lock {
     public Lock setSeat(Seat seat) {
         this.seat = seat;
         return this;
+    }
+
+    @Override
+    public int compareTo(Lock o) {
+        return id.compareTo(o.id);
     }
 }
