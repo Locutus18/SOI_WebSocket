@@ -7,7 +7,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
-@ServerEndpoint(value = "/cinema", encoders = {MessageCoder.class}, decoders = {MessageCoder.class})
+@ServerEndpoint(value = "/cinema", encoders = {Message.class}, decoders = {Message.class})
 public class CinemaEndpoint {
 
     private static final Room room = new Room();
@@ -21,36 +21,39 @@ public class CinemaEndpoint {
 
     @OnMessage
     public Message onMessage(Message message, Session session) throws Exception {
+        Message response = null;
+        Seat seat;
         switch (message.getType()) {
             case IN_INIT:
                 room.init(message.getRows(), message.getColumns());
-                break;
+                return null;
             case IN_ROOMSIZE:
-                return Message.sendRoomSize(room);
+                return Message.createRoomSizeMessage(room);
             case IN_UPDATESEATS:
-                for (int i = 0; i < room.getRows(); i++)
-                    for (int j = 0; j < room.getColumns(); j++)
-                        session.getBasicRemote().sendText(Message.sendSeatStatus(room.getSeat(i, j)).toString());
-                break;
+                Message.sendSeatStatusMessages(session, room);
+                return null;
             case IN_LOCK:
-                Lock lock = room.lock(message.getRow(), message.getColumn());
-                for (Session s : sessions)
-                    s.getBasicRemote().sendText(Message.sendSeatStatus(lock.getSeat()).toString());
-                return Message.sendLockResult(lock.getId());
+                seat = room.getSeat(message.getRow(), message.getColumn());
+                response = Message.createLockResultMessage(room.lock(seat));
+                break;
             case IN_UNLOCK:
-                //Todo
+                seat = room.unlock(message.getLockId());
                 break;
             case IN_RESERVE:
-                //Todo
+                seat = room.reserve(message.getLockId());
                 break;
+            default:
+                return null;
         }
-        return new Message();
+        Message.broadcastSeatStatusMessage(sessions, seat);
+        return response;
     }
 
     @OnError
     public void onError(Throwable exception, Session session) throws IOException {
         System.err.println(exception.getMessage());
-        session.getBasicRemote().sendText(Message.sendError(exception).toString());
+        session.getBasicRemote().sendText(Message.createErrorMessage(exception).toString());
+        exception.printStackTrace();
     }
 
     @OnClose

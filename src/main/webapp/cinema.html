@@ -33,6 +33,9 @@
             context = canvas.getContext('2d');
             draw();
 
+            /**
+             *  Viktor's work start
+             */
             ws = new WebSocket(wsUrl);
             ws.onopen = function (event) {
                 onopen(event);
@@ -46,6 +49,9 @@
             ws.onerror = function (event) {
                 onerror(event);
             };
+            /**
+             *  Viktor's work end
+             */
         }
 
         // Kirajzolja a canvas-t csupa szabad székekkel:
@@ -88,10 +94,10 @@
             var col = Math.floor(mousePos.x / seatSize);
             var row = Math.floor(mousePos.y / seatSize);
             if (selectedSeat != null) {
-                // TODO: ez a régi zárolt szék, ennek a zárolását fel kell oldani
+                unlockSeat();
             }
             selectedSeat = {row: row, column: col};
-            // TODO: ez az új szék, ezt kell zárolni
+            lockSeat(selectedSeat.row, selectedSeat.column);
         }
 
         // Megadja az egér pozícióját a canvas-en belül:
@@ -102,17 +108,32 @@
                 y: evt.clientY - rect.top
             };
         }
-
         window.addEventListener("load", init, false);
 
         /**
-         * Own work start
+         * Viktor's work start
          */
-        function onopen(event) {
+        var lockId = null;
 
+        function onopen(event) {
         }
 
-        function onmessage(event) {
+        function onmessage(message) {
+            var data = JSON.parse(message.data);
+            switch (data.type) {
+                case "roomSize":
+                    setRoomSize(data.rows, data.columns);
+                    break;
+                case "seatStatus":
+                    drawSeat(data.row, data.column, data.status);
+                    break;
+                case "lockResult":
+                    lockId = data.lockId;
+                    break;
+                case "error":
+                    alert(data.message);
+            }
+
 
         }
 
@@ -120,11 +141,11 @@
             ws.close();
         }
 
-        function onerror(event) {
-            alert(event.data);
+        function onerror(error) {
+            alert(error.data);
         }
 
-        function initClick() {
+        function sendInit() {
             rowCount = parseInt(document.getElementById('rows').value);
             colCount = parseInt(document.getElementById('columns').value);
             draw();
@@ -135,12 +156,49 @@
             };
             ws.send(JSON.stringify(msg));
         }
-        function refreshClick() {
-
+        function getRoomSize() {
+            var msg = {
+                "type": "getRoomSize"
+            };
+            ws.send(JSON.stringify(msg));
         }
-        function reserveClick() {
-
+        function setRoomSize(rows, columns) {
+            rowCount = rows;
+            colCount = columns;
+            canvas.height = rowCount * seatSize;
+            canvas.width = colCount * seatSize;
+            var msg = {
+                "type": "updateSeats"
+            };
+            ws.send(JSON.stringify(msg));
         }
+        function lockSeat(row, column) {
+            var msg = {
+                "type": "lockSeat",
+                "row": row,
+                "column": column
+            };
+            ws.send(JSON.stringify(msg))
+        }
+        function unlockSeat() {
+            var msg = {
+                "type": "unlockSeat",
+                "lockId": lockId
+            };
+            ws.send(JSON.stringify(msg))
+        }
+        function reserveSeat() {
+            var msg = {
+                "type": "reserveSeat",
+                "lockId": lockId
+            };
+            ws.send(JSON.stringify(msg));
+            lockId = null;
+            selectedSeat = null;
+        }
+        /**
+         * Viktor's work end
+         */
 
     </script>
 </head>
@@ -154,16 +212,16 @@
 <div style="text-align: center;">
     <!-- Az alábbi gomb hatására le kell kérdezni a moziterem méretét és az összes szék
         státuszát, és ki kell rajzolni a székeket a canvas-re. -->
-    <input id="refreshButton" value="Refresh" type="button" onclick="refreshClick()"><br/>
+    <input id="refreshButton" value="Refresh" type="button" onclick="getRoomSize()"><br/>
     <!-- Az alábbi input mezőben megadható a moziterem sorainak száma: -->
     <label for="rows">row count:</label><input id="rows" name="rows" value="10" type="text" size="5">
     <!-- Az alábbi input mezőben megadható a moziterem oszlopainak száma: -->
     <label for="columns">column count:</label><input id="columns" name="columns" value="20" type="text" size="5">
     <!-- Az alábbi gombnak az előző két mezőben megadott értékekkel kell inicializálnia
         a mozitermet: -->
-    <input id="initButton" value="Init" type="button" onclick="initClick()"><br/>
+    <input id="initButton" value="Init" type="button" onclick="sendInit()"><br/>
     <!-- Az alábbi gombnak le kell foglalnia az éppen aktuálisan zárolt széket: -->
-    <input id="reserveButton" value="Reserve" type="button" onclick="reserveClick()"><br/>
+    <input id="reserveButton" value="Reserve" type="button" onclick="reserveSeat()"><br/>
     <!-- Ez a canvas, ide lesznek kirajzolva a székek: -->
     <canvas id="room"></canvas>
 </div>
