@@ -4,85 +4,78 @@ import javax.json.Json;
 import javax.json.JsonException;
 import javax.json.JsonObject;
 import javax.websocket.*;
-import java.io.IOException;
 import java.io.StringReader;
-import java.util.Set;
+
+import static cinema.MessageType.*;
 
 public class Message implements Encoder.Text<Message>, Decoder.Text<Message> {
 
     private JsonObject json;
 
     public Message() {
-        json = Json.createObjectBuilder().build();
+        super();
     }
 
-    public Message(JsonObject jsonMessage) {
+    private Message(JsonObject jsonMessage) {
         json = jsonMessage;
     }
 
-    public static Message createRoomSizeMessage(Room room) {
-        return new Message(Json.createObjectBuilder()
-                .add("type", MessageType.OUT_ROOMSIZE.toString())
+    Message createRoomSizeMessage(Room room) {
+        json = Json.createObjectBuilder()
+                .add("type", OUT_ROOMSIZE.toString())
                 .add("rows", room.getRows())
                 .add("columns", room.getColumns())
-                .build());
+                .build();
+        return this;
     }
 
-    public static Message createSeatStatusMessage(Seat seat) {
-        return new Message(Json.createObjectBuilder()
-                .add("type", MessageType.OUT_SEATSTATUS.toString())
+    Message createSeatStatusMessage(Seat seat) {
+        json = Json.createObjectBuilder()
+                .add("type", OUT_SEATSTATUS.toString())
                 .add("row", seat.getRow())
                 .add("column", seat.getColumn())
                 .add("status", seat.getStatus().toString())
-                .build());
+                .build();
+        return this;
     }
 
-    public static Message createLockResultMessage(int lockId) {
-        return new Message(Json.createObjectBuilder()
-                .add("type", MessageType.OUT_LOCKRESULT.toString())
+    Message createLockResultMessage(int lockId) {
+        json = Json.createObjectBuilder()
+                .add("type", OUT_LOCKRESULT.toString())
                 .add("lockId", "lock" + lockId)
-                .build());
+                .build();
+        return this;
     }
 
-    public static Message createErrorMessage(Throwable error) {
-        return new Message(Json.createObjectBuilder()
-                .add("type", MessageType.ERROR.toString())
+    Message createErrorMessage(Throwable error) {
+        json = Json.createObjectBuilder()
+                .add("type", ERROR.toString())
                 .add("message", error.getMessage())
-                .build());
+                .build();
+        return this;
     }
 
-    public static void sendSeatStatusMessages(Session session, Room room) throws CinemaException, IOException {
-        for (int i = 0; i < room.getRows(); i++)
-            for (int j = 0; j < room.getColumns(); j++)
-                session.getBasicRemote().sendText(createSeatStatusMessage(room.getSeat(i, j)).toString());
-    }
-
-    public static void broadcastSeatStatusMessage(Set<Session> sessions, Seat seat) throws IOException {
-        for (Session session : sessions)
-            session.getBasicRemote().sendText(createSeatStatusMessage(seat).toString());
-    }
-
-    public MessageType getType() {
+    MessageType getType() {
         return MessageType.fromString(json.getString("type"));
     }
 
-    public int getRow() {
+    int getRow() {
         return json.getInt("row");
     }
 
-    public int getRows() {
+    int getRows() {
         return json.getInt("rows");
     }
 
-    public int getColumn() {
+    int getColumn() {
         return json.getInt("column");
     }
 
-    public int getColumns() {
+    int getColumns() {
         return json.getInt("columns");
     }
 
-    public int getLockId() {
+    int getLockId() {
         return Integer.valueOf(json.getString("lockId").substring(4));
     }
 
@@ -104,11 +97,15 @@ public class Message implements Encoder.Text<Message>, Decoder.Text<Message> {
 
     @Override
     public Message decode(String stringMessage) throws DecodeException {
+        System.out.println("Inbound JSON:");
+        System.out.println(stringMessage);
         return new Message(Json.createReader(new StringReader(stringMessage)).readObject());
     }
 
     @Override
     public String encode(Message message) throws EncodeException {
+        System.out.println("Outbound JSON:");
+        System.out.println(message.toString());
         return message.toString();
     }
 

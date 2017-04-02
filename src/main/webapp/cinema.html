@@ -133,8 +133,6 @@
                 case "error":
                     alert(data.message);
             }
-
-
         }
 
         function onclose(event) {
@@ -149,6 +147,7 @@
             rowCount = parseInt(document.getElementById('rows').value);
             colCount = parseInt(document.getElementById('columns').value);
             draw();
+            lockId = null;
             var msg = {
                 "type": "initRoom",
                 "rows": rowCount,

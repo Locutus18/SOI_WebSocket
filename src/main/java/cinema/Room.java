@@ -2,34 +2,34 @@ package cinema;
 
 import java.util.*;
 
-public class Room {
+class Room {
 
     private int rows, columns;
     private List<Seat> seats;
     private SortedMap<Integer, Seat> locks;
 
-    public Room() {
+    Room() {
         seats = Collections.synchronizedList(new ArrayList<>());
         locks = Collections.synchronizedSortedMap(new TreeMap<>());
         rows = columns = 0;
     }
 
 
-    public Seat getSeat(int row, int column) throws CinemaException {
+    Seat getSeat(int row, int column) throws CinemaException {
         if (row >= rows && column >= columns)
             throw new CinemaException("Seat does not exist.");
         return seats.get(row * columns + column);
     }
 
-    public int getRows() {
+    int getRows() {
         return rows;
     }
 
-    public int getColumns() {
+    int getColumns() {
         return columns;
     }
 
-    public void init(int rows, int columns) throws CinemaException {
+    void init(int rows, int columns) throws CinemaException {
         if (rows < 0 || columns < 0)
             throw new CinemaException("Invalid size parameters.");
         locks.clear();
@@ -44,7 +44,7 @@ public class Room {
                         .setStatus(SeatStatus.FREE));
     }
 
-    public int lock(Seat seat) throws CinemaException {
+    int lock(Seat seat) throws CinemaException {
         if (!seats.contains(seat))
             throw new CinemaException("Invalid seat reference.");
         if (seat.getStatus() != SeatStatus.FREE)
@@ -65,11 +65,11 @@ public class Room {
         return seat;
     }
 
-    public Seat unlock(int lockId) throws CinemaException {
+    Seat unlock(int lockId) throws CinemaException {
         return changeLock(lockId, SeatStatus.FREE);
     }
 
-    public Seat reserve(int lockId) throws CinemaException {
+    Seat reserve(int lockId) throws CinemaException {
         return changeLock(lockId, SeatStatus.RESERVED);
     }
 }

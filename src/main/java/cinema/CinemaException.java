@@ -3,9 +3,10 @@ package cinema;
 public class CinemaException extends Exception {
 
     public CinemaException() {
+        super();
     }
 
-    public CinemaException(String message) {
+    CinemaException(String message) {
         super(message);
     }
 }

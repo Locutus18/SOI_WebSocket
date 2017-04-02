@@ -13,6 +13,15 @@ public class CinemaEndpoint {
     private static final Room room = new Room();
     private static final Set<Session> sessions = Collections.synchronizedSet(new HashSet<Session>());
 
+    private static void sendMessage(Session session, Message message) throws IOException {
+        session.getBasicRemote().sendText(message.toString());
+    }
+
+    private static void broadcastMessage(Message message) throws IOException {
+        for (Session session : sessions)
+            sendMessage(session, message);
+    }
+
     @OnOpen
     public void onOpen(Session session) {
         sessions.add(session);
@@ -21,38 +30,48 @@ public class CinemaEndpoint {
 
     @OnMessage
     public Message onMessage(Message message, Session session) throws Exception {
-        Message response = null;
+        Message response = new Message();
         Seat seat;
         switch (message.getType()) {
             case IN_INIT:
                 room.init(message.getRows(), message.getColumns());
-                return null;
+                response = null;
+                break;
             case IN_ROOMSIZE:
-                return Message.createRoomSizeMessage(room);
+                response.createRoomSizeMessage(room);
+                break;
             case IN_UPDATESEATS:
-                Message.sendSeatStatusMessages(session, room);
-                return null;
+                for (int i = 0; i < room.getRows(); i++)
+                    for (int j = 0; j < room.getColumns(); j++)
+                        sendMessage(session, response.createSeatStatusMessage(room.getSeat(i, j)));
+                response = null;
+                break;
             case IN_LOCK:
                 seat = room.getSeat(message.getRow(), message.getColumn());
-                response = Message.createLockResultMessage(room.lock(seat));
+                int lockId = room.lock(seat);
+                broadcastMessage(response.createSeatStatusMessage(seat));
+                response.createLockResultMessage(lockId);
                 break;
             case IN_UNLOCK:
                 seat = room.unlock(message.getLockId());
+                broadcastMessage(response.createSeatStatusMessage(seat));
+                response = null;
                 break;
             case IN_RESERVE:
                 seat = room.reserve(message.getLockId());
+                broadcastMessage(response.createSeatStatusMessage(seat));
+                response = null;
                 break;
             default:
-                return null;
+                response = null;
         }
-        Message.broadcastSeatStatusMessage(sessions, seat);
         return response;
     }
 
     @OnError
     public void onError(Throwable exception, Session session) throws IOException {
         System.err.println(exception.getMessage());
-        session.getBasicRemote().sendText(Message.createErrorMessage(exception).toString());
+        sendMessage(session, new Message().createErrorMessage(exception));
         exception.printStackTrace();
     }
 
