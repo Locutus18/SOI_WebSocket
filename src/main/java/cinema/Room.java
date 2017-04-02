@@ -55,7 +55,7 @@ class Room {
         return lockId;
     }
 
-    private Seat changeLock(int lockId, SeatStatus newStatus) throws CinemaException {
+    Seat changeLock(int lockId, SeatStatus newStatus) throws CinemaException {
         if (!locks.containsKey(lockId))
             throw new CinemaException("Lock does not exist.");
         Seat seat = locks.get(lockId);
@@ -63,14 +63,6 @@ class Room {
             throw new CinemaException("Seat is not locked.");
         seat.setStatus(newStatus);
         return seat;
-    }
-
-    Seat unlock(int lockId) throws CinemaException {
-        return changeLock(lockId, SeatStatus.FREE);
-    }
-
-    Seat reserve(int lockId) throws CinemaException {
-        return changeLock(lockId, SeatStatus.RESERVED);
     }
 }
 

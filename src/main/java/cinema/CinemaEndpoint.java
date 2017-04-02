@@ -35,37 +35,29 @@ public class CinemaEndpoint {
         switch (message.getType()) {
             case IN_INIT:
                 room.init(message.getRows(), message.getColumns());
-                response = null;
                 break;
             case IN_ROOMSIZE:
-                response.createRoomSizeMessage(room);
-                break;
+                return response.createRoomSizeMessage(room);
             case IN_UPDATESEATS:
                 for (int i = 0; i < room.getRows(); i++)
                     for (int j = 0; j < room.getColumns(); j++)
                         sendMessage(session, response.createSeatStatusMessage(room.getSeat(i, j)));
-                response = null;
                 break;
             case IN_LOCK:
                 seat = room.getSeat(message.getRow(), message.getColumn());
                 int lockId = room.lock(seat);
                 broadcastMessage(response.createSeatStatusMessage(seat));
-                response.createLockResultMessage(lockId);
-                break;
+                return response.createLockResultMessage(lockId);
             case IN_UNLOCK:
-                seat = room.unlock(message.getLockId());
+                seat = room.changeLock(message.getLockId(), SeatStatus.FREE);
                 broadcastMessage(response.createSeatStatusMessage(seat));
-                response = null;
                 break;
             case IN_RESERVE:
-                seat = room.reserve(message.getLockId());
+                seat = room.changeLock(message.getLockId(), SeatStatus.RESERVED);
                 broadcastMessage(response.createSeatStatusMessage(seat));
-                response = null;
                 break;
-            default:
-                response = null;
         }
-        return response;
+        return null;
     }
 
     @OnError
