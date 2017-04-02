@@ -39,8 +39,8 @@ public class CinemaEndpoint {
             case IN_ROOMSIZE:
                 return response.createRoomSizeMessage(room);
             case IN_UPDATESEATS:
-                for (int i = 0; i < room.getRows(); i++)
-                    for (int j = 0; j < room.getColumns(); j++)
+                for (int i = 1; i <= room.getRows(); i++)
+                    for (int j = 1; j <= room.getColumns(); j++)
                         sendMessage(session, response.createSeatStatusMessage(room.getSeat(i, j)));
                 break;
             case IN_LOCK:
@@ -64,7 +64,8 @@ public class CinemaEndpoint {
     public void onError(Throwable exception, Session session) throws IOException {
         System.err.println(exception.getMessage());
         sendMessage(session, new Message().createErrorMessage(exception));
-        exception.printStackTrace();
+        if (!(exception instanceof CinemaException))
+            exception.printStackTrace();
     }
 
     @OnClose

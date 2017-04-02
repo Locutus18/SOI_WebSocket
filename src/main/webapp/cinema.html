@@ -125,7 +125,7 @@
                     setRoomSize(data.rows, data.columns);
                     break;
                 case "seatStatus":
-                    drawSeat(data.row, data.column, data.status);
+                    drawSeat(data.row - 1, data.column - 1, data.status);
                     break;
                 case "lockResult":
                     lockId = data.lockId;
@@ -174,8 +174,8 @@
         function lockSeat(row, column) {
             var msg = {
                 "type": "lockSeat",
-                "row": row,
-                "column": column
+                "row": row + 1,
+                "column": column + 1
             };
             ws.send(JSON.stringify(msg))
         }

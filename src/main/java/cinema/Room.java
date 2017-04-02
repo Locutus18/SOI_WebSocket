@@ -14,13 +14,6 @@ class Room {
         rows = columns = 0;
     }
 
-
-    Seat getSeat(int row, int column) throws CinemaException {
-        if (row >= rows && column >= columns)
-            throw new CinemaException("Seat does not exist.");
-        return seats.get(row * columns + column);
-    }
-
     int getRows() {
         return rows;
     }
@@ -29,15 +22,21 @@ class Room {
         return columns;
     }
 
+    Seat getSeat(int row, int column) throws CinemaException {
+        if (row <= 0 || row > rows || column <= 0 || column > columns)
+            throw new CinemaException("Seat does not exist.");
+        return seats.get((row - 1) * columns + column - 1);
+    }
+
     void init(int rows, int columns) throws CinemaException {
-        if (rows < 0 || columns < 0)
+        if (rows <= 0 || columns <= 0)
             throw new CinemaException("Invalid size parameters.");
         locks.clear();
         seats.clear();
         this.rows = rows;
         this.columns = columns;
-        for (int i = 0; i < rows; i++)
-            for (int j = 0; j < columns; j++)
+        for (int i = 1; i <= rows; i++)
+            for (int j = 1; j <= columns; j++)
                 seats.add(new Seat()
                         .setRow(i)
                         .setColumn(j)
