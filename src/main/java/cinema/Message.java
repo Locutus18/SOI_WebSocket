@@ -3,10 +3,9 @@ package cinema;
 import javax.json.Json;
 import javax.json.JsonException;
 import javax.json.JsonObject;
+import javax.json.JsonObjectBuilder;
 import javax.websocket.*;
 import java.io.StringReader;
-
-import static cinema.MessageType.*;
 
 public class Message implements Encoder.Text<Message>, Decoder.Text<Message> {
 
@@ -20,38 +19,32 @@ public class Message implements Encoder.Text<Message>, Decoder.Text<Message> {
         json = jsonMessage;
     }
 
-    Message createRoomSizeMessage(Room room) {
-        json = Json.createObjectBuilder()
-                .add("type", OUT_ROOMSIZE.toString())
-                .add("rows", room.getRows())
-                .add("columns", room.getColumns())
-                .build();
-        return this;
-    }
-
-    Message createSeatStatusMessage(Seat seat) {
-        json = Json.createObjectBuilder()
-                .add("type", OUT_SEATSTATUS.toString())
-                .add("row", seat.getRow())
-                .add("column", seat.getColumn())
-                .add("status", seat.getStatus().toString())
-                .build();
-        return this;
-    }
-
-    Message createLockResultMessage(int lockId) {
-        json = Json.createObjectBuilder()
-                .add("type", OUT_LOCKRESULT.toString())
-                .add("lockId", "lock" + lockId)
-                .build();
-        return this;
-    }
-
-    Message createErrorMessage(Throwable error) {
-        json = Json.createObjectBuilder()
-                .add("type", ERROR.toString())
-                .add("message", error.getMessage())
-                .build();
+    Message create(MessageType type, Object parameter) {
+        JsonObjectBuilder builder = Json.createObjectBuilder()
+                .add("type", type.toString());
+        switch (type) {
+            case OUT_ROOMSIZE:
+                Room room = (Room) parameter;
+                builder.add("rows", room.getRows())
+                        .add("columns", room.getColumns());
+                break;
+            case OUT_SEATSTATUS:
+                Seat seat = (Seat) parameter;
+                builder.add("row", seat.getRow())
+                        .add("column", seat.getColumn())
+                        .add("status", seat.getStatus().toString());
+                break;
+            case OUT_LOCKRESULT:
+                builder.add("lockId", "lock" + (int) parameter);
+                break;
+            case ERROR:
+                builder.add("message", ((Throwable) parameter).getMessage());
+                break;
+            default:
+                json = null;
+                return this;
+        }
+        json = builder.build();
         return this;
     }
 
@@ -97,15 +90,11 @@ public class Message implements Encoder.Text<Message>, Decoder.Text<Message> {
 
     @Override
     public Message decode(String stringMessage) throws DecodeException {
-        System.out.println("Inbound JSON:");
-        System.out.println(stringMessage);
         return new Message(Json.createReader(new StringReader(stringMessage)).readObject());
     }
 
     @Override
     public String encode(Message message) throws EncodeException {
-        System.out.println("Outbound JSON:");
-        System.out.println(message.toString());
         return message.toString();
     }
 

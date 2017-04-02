@@ -7,6 +7,8 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
+import static cinema.MessageType.*;
+
 @ServerEndpoint(value = "/cinema", encoders = {Message.class}, decoders = {Message.class})
 public class CinemaEndpoint {
 
@@ -35,26 +37,27 @@ public class CinemaEndpoint {
         switch (message.getType()) {
             case IN_INIT:
                 room.init(message.getRows(), message.getColumns());
-                broadcastMessage(response.createRoomSizeMessage(room));
+                broadcastMessage(response.create(OUT_ROOMSIZE, room));
                 break;
             case IN_ROOMSIZE:
-                return response.createRoomSizeMessage(room);
+                return response.create(OUT_ROOMSIZE, room);
             case IN_UPDATESEATS:
                 for (int i = 1; i <= room.getRows(); i++)
                     for (int j = 1; j <= room.getColumns(); j++)
-                        sendMessage(session, response.createSeatStatusMessage(room.getSeat(i, j)));
+                        sendMessage(session, response.create(OUT_SEATSTATUS, room.getSeat(i, j)));
                 break;
             case IN_LOCK:
                 seat = room.getSeat(message.getRow(), message.getColumn());
                 int lockId = room.lock(seat);
-                broadcastMessage(response.createSeatStatusMessage(seat));
-                return response.createLockResultMessage(lockId);
+                broadcastMessage(response.create(OUT_SEATSTATUS, seat));
+                return response.create(OUT_LOCKRESULT, lockId);
             case IN_UNLOCK:
-                broadcastMessage(response.createSeatStatusMessage(room.changeLock(message.getLockId(), SeatStatus.FREE)));
+                seat = room.changeLock(message.getLockId(), SeatStatus.FREE);
+                broadcastMessage(response.create(OUT_SEATSTATUS, seat));
                 break;
             case IN_RESERVE:
                 seat = room.changeLock(message.getLockId(), SeatStatus.RESERVED);
-                broadcastMessage(response.createSeatStatusMessage(seat));
+                broadcastMessage(response.create(OUT_SEATSTATUS, seat));
                 break;
         }
         return null;
@@ -62,8 +65,7 @@ public class CinemaEndpoint {
 
     @OnError
     public void onError(Throwable exception, Session session) throws IOException {
-        System.err.println(exception.getMessage());
-        sendMessage(session, new Message().createErrorMessage(exception));
+        sendMessage(session, new Message().create(ERROR, exception));
         if (!(exception instanceof CinemaException))
             exception.printStackTrace();
     }
