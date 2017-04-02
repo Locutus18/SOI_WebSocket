@@ -29,12 +29,13 @@ public class CinemaEndpoint {
     }
 
     @OnMessage
-    public Message onMessage(Message message, Session session) throws Exception {
+    public Message onMessage(Message message, Session session) throws CinemaException, IOException {
         Message response = new Message();
         Seat seat;
         switch (message.getType()) {
             case IN_INIT:
                 room.init(message.getRows(), message.getColumns());
+                broadcastMessage(response.createRoomSizeMessage(room));
                 break;
             case IN_ROOMSIZE:
                 return response.createRoomSizeMessage(room);
@@ -49,8 +50,7 @@ public class CinemaEndpoint {
                 broadcastMessage(response.createSeatStatusMessage(seat));
                 return response.createLockResultMessage(lockId);
             case IN_UNLOCK:
-                seat = room.changeLock(message.getLockId(), SeatStatus.FREE);
-                broadcastMessage(response.createSeatStatusMessage(seat));
+                broadcastMessage(response.createSeatStatusMessage(room.changeLock(message.getLockId(), SeatStatus.FREE)));
                 break;
             case IN_RESERVE:
                 seat = room.changeLock(message.getLockId(), SeatStatus.RESERVED);

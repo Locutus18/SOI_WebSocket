@@ -44,10 +44,8 @@ class Room {
     }
 
     int lock(Seat seat) throws CinemaException {
-        if (!seats.contains(seat))
-            throw new CinemaException("Invalid seat reference.");
         if (seat.getStatus() != SeatStatus.FREE)
-            throw new CinemaException("Seat cannot be locked.");
+            throw new CinemaException("Seat is not free!");
         int lockId = (locks.isEmpty()) ? 0 : locks.lastKey() + 1;
         seat.setStatus(SeatStatus.LOCKED);
         locks.put(lockId, seat);
@@ -55,11 +53,9 @@ class Room {
     }
 
     Seat changeLock(int lockId, SeatStatus newStatus) throws CinemaException {
-        if (!locks.containsKey(lockId))
-            throw new CinemaException("Lock does not exist.");
         Seat seat = locks.get(lockId);
         if (seat.getStatus() != SeatStatus.LOCKED)
-            throw new CinemaException("Seat is not locked.");
+            throw new CinemaException("Expired lock!");
         seat.setStatus(newStatus);
         return seat;
     }

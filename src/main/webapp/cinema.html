@@ -5,8 +5,8 @@
     <title>Seat reservation</title>
     <script language="javascript" type="text/javascript">
         function getRootUri() {
-            return "ws://" + (document.location.hostname == "" ? "localhost" : document.location.hostname) + ":" +
-                (document.location.port == "" ? "8080" : document.location.port);
+            return "ws://" + (document.location.hostname === "" ? "localhost" : document.location.hostname) + ":" +
+                (document.location.port === "" ? "8080" : document.location.port);
         }
 
         var ws = null;
@@ -38,13 +38,12 @@
              */
             ws = new WebSocket(wsUrl);
             ws.onopen = function (event) {
-                onopen(event);
             };
             ws.onmessage = function (event) {
                 onmessage(event);
             };
-            ws.onclose = function (event) {
-                onclose(event);
+            ws.onclose = function () {
+                ws.close();
             };
             ws.onerror = function (event) {
                 onerror(event);
@@ -93,7 +92,7 @@
         function selectSeat() {
             var col = Math.floor(mousePos.x / seatSize);
             var row = Math.floor(mousePos.y / seatSize);
-            if (selectedSeat != null) {
+            if (lockId !== null) {
                 unlockSeat();
             }
             selectedSeat = {row: row, column: col};
@@ -115,9 +114,6 @@
          */
         var lockId = null;
 
-        function onopen(event) {
-        }
-
         function onmessage(message) {
             var data = JSON.parse(message.data);
             switch (data.type) {
@@ -131,16 +127,14 @@
                     lockId = data.lockId;
                     break;
                 case "error":
+                    lockId = null;
+                    selectedSeat = null;
                     alert(data.message);
             }
         }
 
-        function onclose(event) {
-            ws.close();
-        }
-
-        function onerror(error) {
-            alert(error.data);
+        function onerror(event) {
+            alert(event.toString());
         }
 
         function sendInit() {
