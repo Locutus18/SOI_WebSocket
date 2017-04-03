@@ -5,7 +5,9 @@ import javax.json.JsonException;
 import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
 import javax.websocket.*;
+import java.io.IOException;
 import java.io.StringReader;
+import java.util.Collection;
 
 public class Message implements Encoder.Text<Message>, Decoder.Text<Message> {
 
@@ -15,8 +17,12 @@ public class Message implements Encoder.Text<Message>, Decoder.Text<Message> {
         super();
     }
 
-    private Message(JsonObject jsonMessage) {
+    Message(JsonObject jsonMessage) {
         json = jsonMessage;
+    }
+
+    Message(MessageType type, Object parameter) {
+        create(type, parameter);
     }
 
     Message create(MessageType type, Object parameter) {
@@ -70,6 +76,15 @@ public class Message implements Encoder.Text<Message>, Decoder.Text<Message> {
 
     int getLockId() {
         return Integer.valueOf(json.getString("lockId").substring(4));
+    }
+
+    void sendTo(Session session) throws IOException {
+        session.getBasicRemote().sendText(toString());
+    }
+
+    void sendTo(Collection<Session> sessions) throws IOException {
+        for (Session session : sessions)
+            sendTo(session);
     }
 
     @Override
